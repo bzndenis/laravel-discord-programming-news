@@ -33,6 +33,13 @@ class ProcessSecuritySource implements ShouldQueue
         // In a real scenario, you'd pass $this->source to the scan method to only scan that source.
         // $advisories = $service->scan($this->source);
         $advisories = $service->scan(); 
+        
+        Log::info("Scan complete. Found " . count($advisories) . " new advisories.");
+
+        if (empty($advisories)) {
+            Log::info("No new advisories to process.");
+            return;
+        } 
 
         $webhookUrl = config('security.discord.webhook_url');
 
