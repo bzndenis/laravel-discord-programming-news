@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -80,5 +81,7 @@ class ProcessSecuritySource implements ShouldQueue
                  Log::error("Failed to send Discord notification: " . $e->getMessage());
              }
         }
+        
+        Cache::put('bot_last_scan_completed', now());
     }
 }
