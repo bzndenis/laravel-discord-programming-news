@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 | Discord Interaction Webhook
 |--------------------------------------------------------------------------
 */
-Route::match(['get', 'post'], '/api/discord/interactions', [DiscordInteractionController::class, 'handle'])
+Route::post('/api/discord/interactions', [DiscordInteractionController::class, 'handle'])
     ->name('discord.interactions');
 
 /*
