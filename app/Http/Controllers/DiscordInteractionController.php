@@ -18,12 +18,18 @@ class DiscordInteractionController extends Controller
      */
     public function handle(Request $request): JsonResponse
     {
-        // Get signature headers
+        // Handle GET - Discord verification check
+        if ($request->isMethod('GET')) {
+            Log::info('Discord GET verification check');
+            return response()->json(['status' => 'ok'], 200);
+        }
+
+        // Handle POST - Actual interactions
         $signature = $request->header('X-Signature-Ed25519');
         $timestamp = $request->header('X-Signature-Timestamp');
         $body = $request->getContent();
 
-        // For debugging
+        // Debug logging
         Log::info('Discord interaction attempt', [
             'method' => $request->method(),
             'has_signature' => !empty($signature),
@@ -31,7 +37,7 @@ class DiscordInteractionController extends Controller
             'body_length' => strlen($body),
         ]);
 
-        // Verify signature (required for all Discord interactions)
+        // Verify signature
         if (!$signature || !$timestamp) {
             Log::warning('Discord interaction missing signature headers');
             return response()->json(['error' => 'Invalid request'], 401);
