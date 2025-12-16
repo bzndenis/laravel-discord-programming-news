@@ -26,7 +26,7 @@ class FeatureScan extends Command
     public function handle(): void
     {
         $this->info('Dispatching feature scan job...');
-        \App\Jobs\ProcessFeatureUpdates::dispatch();
+        \App\Jobs\ProcessFeatureUpdate::dispatch();
         $this->info('Job dispatched.');
     }
 }

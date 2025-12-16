@@ -1,9 +1,23 @@
 <?php
 
+use App\Http\Controllers\DiscordInteractionController;
 use App\Models\SecurityAdvisory;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Discord Interaction Webhook
+|--------------------------------------------------------------------------
+*/
+Route::post('/api/discord/interactions', [DiscordInteractionController::class, 'handle'])
+    ->name('discord.interactions');
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
     $lastScan = Cache::get('bot_last_scan_completed');
     $status = 'Unknown';

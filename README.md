@@ -1,59 +1,246 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Discord Programming News Bot
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Bot Laravel untuk memantau security advisories dan feature updates dari berbagai framework/library programming, dengan notifikasi otomatis ke Discord.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- 🔒 **Security Monitoring**: Memantau security advisories dari GitHub Advisory Database
+- 🚀 **Feature Updates**: Tracking release terbaru dari framework populer
+- 💬 **Discord Commands**: Slash commands untuk trigger manual updates
+- 📊 **Status Dashboard**: Web dashboard untuk melihat status bot
+- 🤖 **Automated Notifications**: Notifikasi otomatis via Discord webhook
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Discord Slash Commands
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Bot mendukung slash commands berikut:
 
-## Learning Laravel
+- `/security-update` - Trigger manual scan untuk security advisories
+- `/feature-update` - Trigger manual scan untuk feature updates
+- `/status` - Lihat status bot dan informasi update terakhir
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Requirements
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- PHP 8.2 atau lebih tinggi
+- Laravel 11
+- MySQL/SQLite database
+- Discord Bot Account
 
-## Laravel Sponsors
+## Installation
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 1. Clone Repository
 
-### Premium Partners
+```bash
+git clone <repository-url>
+cd laravel-discord-programming-news
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2. Install Dependencies
 
-## Contributing
+```bash
+composer install
+npm install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Environment Configuration
 
-## Code of Conduct
+Copy `.env.example` ke `.env`:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+cp .env.example .env
+```
 
-## Security Vulnerabilities
+Update konfigurasi database dan Discord:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```env
+DB_CONNECTION=mysql
+DB_HOST=your-database-host
+DB_DATABASE=your-database-name
+DB_USERNAME=your-username
+DB_PASSWORD=your-password
+
+# Discord Configuration
+DISCORD_APP_ID=your-app-id
+DISCORD_PUBLIC_KEY=your-public-key
+DISCORD_BOT_TOKEN=your-bot-token
+DISCORD_SECURITY_WEBHOOK_URL=your-webhook-url
+```
+
+### 4. Database Setup
+
+```bash
+php artisan key:generate
+php artisan migrate
+```
+
+### 5. Setup Discord Bot
+
+#### A. Create Discord Application
+
+1. Kunjungi [Discord Developer Portal](https://discord.com/developers/applications)
+2. Click "New Application" dan beri nama bot Anda
+3. Navigate ke tab "Bot" dan click "Add Bot"
+4. Copy **Bot Token** dan simpan ke `.env` sebagai `DISCORD_BOT_TOKEN`
+
+#### B. Get Application Credentials
+
+1. Navigate ke tab "General Information"
+2. Copy **Application ID** → `DISCORD_APP_ID`
+3. Copy **Public Key** → `DISCORD_PUBLIC_KEY`
+
+#### C. Create Webhook
+
+1. Buka Discord server Anda
+2. Klik kanan pada channel yang ingin menerima notifikasi → "Edit Channel"
+3. Navigate ke "Integrations" → "Webhooks" → "New Webhook"
+4. Copy webhook URL → `DISCORD_SECURITY_WEBHOOK_URL`
+
+#### D. Enable Interactions
+
+1. Di Discord Developer Portal, navigate ke tab "General Information"
+2. Scroll ke "Interactions Endpoint URL"
+3. Masukkan URL: `https://your-domain.com/api/discord/interactions`
+4. Click "Save Changes"
+
+> **Note**: Discord akan melakukan verification request. Pastikan aplikasi Anda sudah deploy dan route `/api/discord/interactions` dapat diakses.
+
+#### E. Install Bot to Server
+
+1. Navigate ke tab "OAuth2" → "URL Generator"
+2. Select scopes: `applications.commands` dan `bot`
+3. Select permissions: `Send Messages`, `Embed Links`
+4. Copy generated URL dan buka di browser
+5. Pilih server dan authorize bot
+
+### 6. Register Discord Commands
+
+Setelah bot terinstall, register slash commands:
+
+```bash
+php artisan discord:register-commands
+```
+
+Untuk testing lebih cepat, gunakan guild-specific registration:
+
+```bash
+php artisan discord:register-commands --guild=YOUR_GUILD_ID
+```
+
+## Configuration
+
+### Security Frameworks
+
+Edit `config/security.php` untuk menambah/mengurangi framework yang dimonitor:
+
+```php
+'frameworks' => [
+    'laravel/framework',
+    'next',
+    'react',
+    'vue',
+    // tambahkan framework lainnya
+],
+```
+
+### Feature Repositories
+
+Edit `config/features.php` untuk tracking releases:
+
+```php
+'repos' => [
+    'Laravel' => 'laravel/framework',
+    'Node.js' => 'nodejs/node',
+    // tambahkan repository lainnya
+],
+```
+
+## Cron Job Setup
+
+Bot memerlukan Laravel scheduler untuk automated scans. Tambahkan ke crontab:
+
+```bash
+* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Untuk shared hosting (cPanel), gunakan path absolut ke PHP:
+
+```bash
+* * * * * /usr/local/bin/php /home/username/public_html/artisan schedule:run >> /dev/null 2>&1
+```
+
+## Usage
+
+### Automated Scanning
+
+Schedule sudah dikonfigurasi untuk:
+- Security scan: Setiap 6 jam
+- Feature scan: Setiap 12 jam
+
+### Manual Scanning via Discord
+
+Gunakan slash commands di Discord:
+- `/security-update` - Scan security advisories sekarang
+- `/feature-update` - Scan feature updates sekarang
+- `/status` - Lihat status dan statistik bot
+
+### Manual Scanning via Artisan
+
+```bash
+# Security scan
+php artisan security:scan
+
+# Feature scan  
+php artisan feature:scan
+```
+
+## Development
+
+Run development server:
+
+```bash
+composer run dev
+```
+
+atau jalankan services secara terpisah:
+
+```bash
+# Terminal 1: Laravel server
+php artisan serve
+
+# Terminal 2: Queue worker
+php artisan queue:listen
+
+# Terminal 3: Logs
+php artisan pail
+
+# Terminal 4: Vite
+npm run dev
+```
+
+## Troubleshooting
+
+### Discord Interactions Not Working
+
+1. Pastikan Interactions Endpoint URL sudah diset dengan benar di Discord Developer Portal
+2. Verify bahwa route `/api/discord/interactions` dapat diakses publik
+3. Check logs di `storage/logs/laravel.log` untuk error signature verification
+4. Pastikan `DISCORD_PUBLIC_KEY` di `.env` sesuai dengan Public Key di Discord Developer Portal
+
+### Commands Not Appearing
+
+1. Jalankan ulang `php artisan discord:register-commands`
+2. Untuk testing, gunakan guild-specific: `php artisan discord:register-commands --guild=YOUR_GUILD_ID`
+3. Global commands bisa memakan waktu hingga 1 jam untuk propagate
+
+### Webhook Not Sending
+
+1. Verify `DISCORD_SECURITY_WEBHOOK_URL` valid
+2. Check webhook masih aktif di Discord channel settings
+3. Review logs untuk HTTP errors
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT License
+
+## Contributing
+
+Pull requests are welcome! For major changes, please open an issue first.
