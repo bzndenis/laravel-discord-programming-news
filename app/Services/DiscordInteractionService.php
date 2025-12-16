@@ -26,16 +26,42 @@ class DiscordInteractionService
         try {
             // Discord uses Ed25519 signature verification
             $message = $timestamp . $body;
-            $signatureBytes = hex2bin($signature);
-            $publicKeyBytes = hex2bin($publicKey);
             
-            return sodium_crypto_sign_verify_detached(
+            Log::debug('Signature verification attempt', [
+                'timestamp' => $timestamp,
+                'body_length' => strlen($body),
+                'message_length' => strlen($message),
+                'signature_length' => strlen($signature),
+                'public_key_length' => strlen($publicKey),
+            ]);
+            
+            $signatureBytes = @hex2bin($signature);
+            $publicKeyBytes = @hex2bin($publicKey);
+            
+            if ($signatureBytes === false) {
+                Log::error('Failed to decode signature hex');
+                return false;
+            }
+            
+            if ($publicKeyBytes === false) {
+                Log::error('Failed to decode public key hex');
+                return false;
+            }
+            
+            $result = sodium_crypto_sign_verify_detached(
                 $signatureBytes,
                 $message,
                 $publicKeyBytes
             );
+            
+            Log::info('Signature verification result', ['valid' => $result]);
+            
+            return $result;
         } catch (\Exception $e) {
-            Log::error('Signature verification failed: ' . $e->getMessage());
+            Log::error('Signature verification exception', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return false;
         }
     }
