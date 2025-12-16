@@ -18,6 +18,15 @@ class DiscordInteractionController extends Controller
      */
     public function handle(Request $request): JsonResponse
     {
+        // Handle GET request (Discord verification check)
+        if ($request->isMethod('get')) {
+            return response()->json([
+                'message' => 'Discord Interactions Endpoint is ready',
+                'status' => 'ok'
+            ]);
+        }
+
+        // Handle POST request (actual interactions)
         // Get signature headers
         $signature = $request->header('X-Signature-Ed25519');
         $timestamp = $request->header('X-Signature-Timestamp');
