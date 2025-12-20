@@ -71,47 +71,83 @@ class SecurityMonitorService
         $results = [];
 
         foreach ($frameworks as $framework) {
-            // Attempt to guess package name from repo name (e.g. laravel/framework -> laravel/framework, vercel/next.js -> next)
-            // Ideally config should have precise package names. 
-            // For this implementation, we will try to use the configured name as the package name filter.
-            
-            // We only query for High and Critical to save resources if API supports, 
-            // but GitHub API 'severity' param is specific. We'll fetch recent ones.
-            
             try {
-                $response = Http::withHeaders([
+                // GitHub Security Advisories API - fetch all recent advisories
+                // Then filter by package name in the vulnerabilities array
+                $response = Http::timeout(30)->withHeaders([
                     'Accept' => 'application/vnd.github+json',
                     'X-GitHub-Api-Version' => '2022-11-28',
-                    'User-Agent' => 'Laravel-Security-Bot' // GitHub requires UA
+                    'User-Agent' => 'Laravel-Security-Bot'
                 ])->get('https://api.github.com/advisories', [
-                    'affects' => $framework,
-                    'per_page' => 5, // Keep it light
+                    'per_page' => 30, // Get more to filter by package
                     'sort' => 'published',
                     'direction' => 'desc'
                 ]);
 
                 if ($response->failed()) {
-                    Log::error("GitHub API failed for {$framework}: " . $response->body());
+                    Log::error("GitHub API failed for {$framework}: Status " . $response->status() . " - " . $response->body());
                     continue;
                 }
 
                 $advisories = $response->json();
+                
+                if (!is_array($advisories)) {
+                    Log::warning("GitHub API returned non-array response for {$framework}");
+                    continue;
+                }
 
                 foreach ($advisories as $advisory) {
+                    // Check if this advisory affects our framework
+                    $affectsFramework = false;
+                    
+                    if (isset($advisory['vulnerabilities']) && is_array($advisory['vulnerabilities'])) {
+                        foreach ($advisory['vulnerabilities'] as $vuln) {
+                            $package = $vuln['package']['name'] ?? '';
+                            $ecosystem = $vuln['package']['ecosystem'] ?? '';
+                            
+                            // Match framework name (case-insensitive)
+                            if (stripos($package, $framework) !== false || 
+                                stripos($framework, $package) !== false ||
+                                ($ecosystem === 'npm' && in_array($framework, ['next', 'react', 'vue', 'axios']) && 
+                                 stripos($package, $framework) !== false)) {
+                                $affectsFramework = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Also check if framework name appears in summary or description
+                    if (!$affectsFramework) {
+                        $summary = strtolower($advisory['summary'] ?? '');
+                        $description = strtolower($advisory['description'] ?? '');
+                        $frameworkLower = strtolower($framework);
+                        
+                        if (stripos($summary, $frameworkLower) !== false || 
+                            stripos($description, $frameworkLower) !== false) {
+                            $affectsFramework = true;
+                        }
+                    }
+
+                    if (!$affectsFramework) {
+                        continue;
+                    }
+
                     $results[] = [
                         'framework' => $framework,
-                        'cve_id' => $advisory['cve_id'] ?? $advisory['ghsa_id'],
-                        'severity' => $advisory['severity'],
-                        'title' => $advisory['summary'],
-                        'description' => $advisory['description'],
-                        'url' => $advisory['html_url'],
-                        'published_at' => $advisory['published_at'],
-                        'tags' => [] 
+                        'cve_id' => $advisory['cve_id'] ?? $advisory['ghsa_id'] ?? null,
+                        'severity' => $advisory['severity'] ?? 'MODERATE',
+                        'title' => $advisory['summary'] ?? 'No title',
+                        'description' => $advisory['description'] ?? '',
+                        'url' => $advisory['html_url'] ?? '',
+                        'published_at' => $advisory['published_at'] ?? now()->toIso8601String(),
+                        'tags' => []
                     ];
                 }
 
+                Log::info("Found " . count($results) . " advisories for {$framework}");
+
             } catch (\Exception $e) {
-                Log::error("Error processing {$framework}: " . $e->getMessage());
+                Log::error("Error processing {$framework}: " . $e->getMessage() . " | Trace: " . $e->getTraceAsString());
             }
         }
 
